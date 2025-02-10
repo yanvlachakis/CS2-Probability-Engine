@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 PrizePicks Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <style>
+        .card {
+            margin-bottom: 20px;
+        }
+        .prediction-card {
+            transition: all 0.3s ease;
+        }
+        .prediction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">CS2 PrizePicks Probability Engine</span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Stats Overview -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Predictions</h5>
+                        <h2 id="total-predictions">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Average Confidence</h5>
+                        <h2 id="avg-confidence">0%</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">24h Cost</h5>
+                        <h2 id="daily-cost">$0.00</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Cost</h5>
+                        <h2 id="total-cost">$0.00</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Model Usage Distribution</h5>
+                        <canvas id="model-usage-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Prediction Confidence Trend</h5>
+                        <canvas id="confidence-trend-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Make Prediction Form -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Make Prediction</h5>
+                        <form id="prediction-form">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6>Player Stats</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Kills</label>
+                                        <input type="number" class="form-control" name="kills" value="20">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Headshots</label>
+                                        <input type="number" class="form-control" name="headshots" value="10">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">AWP Kills</label>
+                                        <input type="number" class="form-control" name="awp_kills" value="5">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">First Bloods</label>
+                                        <input type="number" class="form-control" name="first_bloods" value="2">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>Match Context</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Map</label>
+                                        <select class="form-control" name="map_name">
+                                            <option value="dust2">Dust 2</option>
+                                            <option value="inferno">Inferno</option>
+                                            <option value="mirage">Mirage</option>
+                                            <option value="ancient">Ancient</option>
+                                            <option value="anubis">Anubis</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Tournament Tier</label>
+                                        <select class="form-control" name="tournament_tier">
+                                            <option value="1">Tier 1 (Major)</option>
+                                            <option value="2">Tier 2</option>
+                                            <option value="3">Tier 3</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Stage</label>
+                                        <select class="form-control" name="stage">
+                                            <option value="final">Final</option>
+                                            <option value="playoff">Playoff</option>
+                                            <option value="group">Group Stage</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>Additional Context</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Prize Pool</label>
+                                        <input type="number" class="form-control" name="prize_pool" value="100000">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Team Ranking Difference</label>
+                                        <input type="number" class="form-control" name="team_ranking_difference" value="5">
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" name="is_lan" checked>
+                                        <label class="form-check-label">LAN Event</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Make Prediction</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Predictions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Recent Predictions</h5>
+                        <div id="recent-predictions" class="row"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Socket.IO
+        const socket = io();
+        
+        // Initialize charts
+        const modelUsageChart = new Chart(
+            document.getElementById('model-usage-chart'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: ['Regression', 'OpenAI', 'Hybrid'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+                    }]
+                }
+            }
+        );
+
+        const confidenceTrendChart = new Chart(
+            document.getElementById('confidence-trend-chart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Confidence',
+                        data: [],
+                        borderColor: '#36A2EB',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1
+                        }
+                    }
+                }
+            }
+        );
+
+        // Update dashboard with new prediction
+        socket.on('prediction_update', function(prediction) {
+            updateDashboard();
+            addPredictionCard(prediction);
+        });
+
+        // Update dashboard statistics
+        function updateDashboard() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(stats => {
+                    // Update counters
+                    document.getElementById('total-predictions').textContent = stats.total_predictions;
+                    document.getElementById('avg-confidence').textContent = 
+                        (stats.average_confidence * 100).toFixed(1) + '%';
+                    document.getElementById('daily-cost').textContent = 
+                        '$' + stats.cost_stats.last_24h_cost.toFixed(2);
+                    document.getElementById('total-cost').textContent = 
+                        '$' + stats.cost_stats.total_cost.toFixed(2);
+
+                    // Update model usage chart
+                    modelUsageChart.data.datasets[0].data = [
+                        stats.model_usage.regression,
+                        stats.model_usage.openai,
+                        stats.model_usage.hybrid
+                    ];
+                    modelUsageChart.update();
+                });
+        }
+
+        // Add new prediction card
+        function addPredictionCard(prediction) {
+            const container = document.getElementById('recent-predictions');
+            const card = document.createElement('div');
+            card.className = 'col-md-4 mb-3';
+            card.innerHTML = `
+                <div class="card prediction-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Prediction: ${prediction.prediction.toFixed(2)}</h5>
+                        <p class="card-text">
+                            Model: ${prediction.model_used}<br>
+                            Confidence: ${(prediction.confidence * 100).toFixed(1)}%<br>
+                            Cost: $${prediction.usage_stats.daily_requests.total_cost.toFixed(3)}
+                        </p>
+                        <small class="text-muted">${new Date(prediction.timestamp).toLocaleString()}</small>
+                    </div>
+                </div>
+            `;
+            container.insertBefore(card, container.firstChild);
+            
+            // Update confidence trend chart
+            confidenceTrendChart.data.labels.push(
+                new Date(prediction.timestamp).toLocaleTimeString()
+            );
+            confidenceTrendChart.data.datasets[0].data.push(prediction.confidence);
+            
+            // Keep only last 10 points
+            if (confidenceTrendChart.data.labels.length > 10) {
+                confidenceTrendChart.data.labels.shift();
+                confidenceTrendChart.data.datasets[0].data.shift();
+            }
+            
+            confidenceTrendChart.update();
+        }
+
+        // Handle prediction form submission
+        document.getElementById('prediction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                player_stats: {
+                    kills: parseInt(formData.get('kills')),
+                    headshots: parseInt(formData.get('headshots')),
+                    awp_kills: parseInt(formData.get('awp_kills')),
+                    first_bloods: parseInt(formData.get('first_bloods')),
+                    headshot_percentage: (parseInt(formData.get('headshots')) / parseInt(formData.get('kills'))) * 100
+                },
+                match_context: {
+                    map_name: formData.get('map_name'),
+                    tournament_tier: parseInt(formData.get('tournament_tier')),
+                    stage: formData.get('stage'),
+                    is_lan: formData.get('is_lan') === 'on',
+                    prize_pool: parseInt(formData.get('prize_pool')),
+                    team_ranking_difference: parseInt(formData.get('team_ranking_difference'))
+                }
+            };
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Prediction failed');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to make prediction: ' + error.message);
+            }
+        });
+
+        // Initial dashboard update
+        updateDashboard();
+        
+        // Load initial predictions
+        fetch('/api/predictions')
+            .then(response => response.json())
+            .then(predictions => {
+                predictions.reverse().forEach(addPredictionCard);
+            });
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

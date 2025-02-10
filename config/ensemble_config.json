@@ -1,0 +1,36 @@
+{
+    "openai_threshold": 0.8,
+    "hybrid_mode": true,
+    "weights": {
+        "regression": 0.6,
+        "openai": 0.4
+    },
+    "high_stakes_threshold": {
+        "prize_pool": 100000,
+        "tournament_tier": 2,
+        "stage_weights": {
+            "final": 1.0,
+            "playoff": 0.8,
+            "group": 0.6,
+            "regular_season": 0.5
+        }
+    },
+    "cost_control": {
+        "daily_budget": 50.0,
+        "alert_threshold": 0.8,
+        "cost_per_prediction": {
+            "openai": 0.02,
+            "regression": 0.001
+        }
+    },
+    "performance_thresholds": {
+        "min_confidence": 0.7,
+        "prediction_timeout": 5.0,
+        "max_retries": 2
+    },
+    "caching": {
+        "enabled": true,
+        "ttl_hours": 24,
+        "max_cache_size_mb": 100
+    }
+} 

@@ -1,0 +1,35 @@
+{
+    "development": {
+        "host": "localhost",
+        "port": 5000,
+        "debug": true,
+        "secret_key": "dev-secret-key",
+        "websocket": {
+            "async_mode": "threading",
+            "cors_allowed_origins": "*",
+            "ping_timeout": 5,
+            "ping_interval": 25
+        },
+        "cache": {
+            "type": "simple",
+            "threshold": 1000
+        }
+    },
+    "production": {
+        "host": "0.0.0.0",
+        "port": 8000,
+        "debug": false,
+        "secret_key": "CHANGE_THIS_IN_PRODUCTION",
+        "websocket": {
+            "async_mode": "eventlet",
+            "cors_allowed_origins": [],
+            "ping_timeout": 10,
+            "ping_interval": 25
+        },
+        "cache": {
+            "type": "redis",
+            "redis_url": "redis://localhost:6379/0",
+            "threshold": 5000
+        }
+    }
+} 
