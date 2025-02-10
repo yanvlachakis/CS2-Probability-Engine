@@ -19,6 +19,20 @@ This project combines statistical analysis and machine learning to predict CS2 p
 - Real-time data streaming and processing
 - WebSocket support for live updates
 
+## Documentation
+
+### Core Documentation
+- [Scoring Rules](docs/scoring_rules.md) - Comprehensive PrizePicks scoring rules and implementation
+- [Model Documentation](docs/model_documentation.md) - Detailed model architecture and comparison
+- [Dashboard Guide](docs/dashboard.md) - Real-time monitoring dashboard setup and usage
+- [Scraper Configuration](docs/scraper_configuration.md) - Data ingestion and mapping configuration
+
+### Quick Links
+- [Scoring Implementation](models/scoring_rules.py) - Score calculation code
+- [Model Implementation](models/ensemble.py) - Hybrid model implementation
+- [Dashboard Implementation](templates/dashboard.html) - Dashboard interface
+- [Configuration Examples](config/) - Example configuration files
+
 ## PrizePicks Scoring Rules
 
 ### Basic Scoring Chart
